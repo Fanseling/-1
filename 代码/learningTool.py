@@ -141,7 +141,7 @@ def buildFerns(dataMat,lables):                      #这是以前《机器学�
     m,n = np.shape(dataMat)
     result = [data[-1] for data in dataMat]
     if n==1:
-        return dataMat.sum()/m
+        return dataMat.sum()/(float)m
     fern={}
     #dataMatTem=dataMat[:,:]
     #lablesTem = lables[:]
@@ -149,10 +149,10 @@ def buildFerns(dataMat,lables):                      #这是以前《机器学�
     lableJ = lables[featIndex]
     del lables[featIndex]
     fern[lableJ]={}
-    elemset = [data[j] for data in dataSet]
+    elemset = [data[featIndex] for data in dataSet]
     elemset = set(elemset)                            #用来去重
     for elem in elemset:
-        fern[lableJ][elem]={}
+        fern[lableJ][elem]={}                         #将dataMat中featIndex那一列的元素无重复的放入fern[lableJ]中。
         fern[lableJ][elem]=buildFerns(devision(dataMat,featIndex,elem),lables)
     return fern
     '''
@@ -200,15 +200,17 @@ onlineBoosting应该说只能更新弱分类器的权值，而不能替换整个
 多少时精度较好,可能需要大大提高计算量。这个想法暂时没有实现。
 '''
 
-def bestFern(randomFerns,lables,D):
+def bestFern(randomFerns,dataMat,lables,D):
+    for randomFern in randomFerns:
+        err=fernClassify()
 
-
-
-def AdaBoost(randomFerns,dataMat,num):            #此处的randomFerns是单个块的                      
+def AdaBoost(randomFerns,dataMat,num):            #此处的randomFerns是单个块的
     lables = [data[-1] for data in dataMat]     #注意，最后一行是标签项
-    for data in dataMat:del
+    for data in dataMat:
+        del data[-1]
+    dataMat=np.mat(dataMat)
     m,n=np.shape(dataMat)
     n=n-1
     D = mat(ones((m,1))/m)                     #初始化样本权重向量为1/m
     for i in range(num):
-        bestFern={randomFerns,lables,D}
+        bestFern={randomFerns,dataMat,lables,D}
