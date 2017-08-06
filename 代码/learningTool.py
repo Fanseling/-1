@@ -198,14 +198,16 @@ def randomFern(inteIma,blocksInfos,lables,numFeat，numFern):                   
 onlineBoosting应该说只能更新弱分类器的权值，而不能替换整个弱分类器，因为在2bitBP上弱分类器茫
 茫多，不能保证新生成的弱分类器比原来的好。
     新想法：可以先生成个弱分类器池M，替换原强分类器里的弱分类器为池M中最优的。但不能保证len(M)为
-多少时精度较好,可能需要大大提高计算量。这个想法暂时没有实现。
+多少时精度较好,可能需要大大提高计算量。这个想法在下面实现。
 '''
 
 def bestFern(randomFerns,dataMat,lables,D):
     minErr = np.inf
     bestIndex = -np.inf
     for index in range(len(randomFerns)):
-        err=app.fernClassify(randomFerns[index], dataMat)      #err为错误率，未正确分类样本数/总样本数 
+        result=[]
+        result = app.fernClassify(randomFerns[index], dataMat)      #err为错误率，未正确分类样本数/总样本数
+        err=abs(result-lables).sum()/len(lables)
         if err<minErr:
             minErr = err
             bestIndex = index
@@ -213,11 +215,12 @@ def bestFern(randomFerns,dataMat,lables,D):
 
 def refrashD(alpha,D):
     for i in range(len(D)):
-
+        D[i, 0]=(D[i, 0]*np.e**-alpha)/D.sum()
+    return D
 
 def AdaBoost(randomFerns,dataMat,num):            #此处的randomFerns是单个块的，num是这个强分类器要多少弱分类器
     classifiers = []
-    lables = [data[-1] for data in dataMat]     #注意，最后一行是标签项
+    lables = np.mat([[data[-1] for data in dataMat]]).T     #注意，最后一行是标签项,已矩阵化,列向量矩阵
     for data in dataMat:
         del data[-1]
     dataMat=np.mat(dataMat)
@@ -227,7 +230,7 @@ def AdaBoost(randomFerns,dataMat,num):            #此处的randomFerns是单个
         classifier={}
         bestFernIndex,err=bestFern(randomFerns, dataMat, lables, D)
         alpha = 0.5*log((1-err)/err)           #计算alpha
-        D=refrashD(alpha,D)                    #更新权重矩阵D
+        D = refrashD(alpha,D)                  #更新权重矩阵D
         classifier["fernIndex"]=bestFernIndex
         classifier["alpha"] = alpha
         classifiers.append(classifier)
