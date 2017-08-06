@@ -1,11 +1,12 @@
 import numpy as np
 from ImageTool import towBitBP           #此处彻底破坏了之前的低耦合想法
+import application as app
 def getPosition(path):                   #(文件操作)从给定的txt中，获取目标位置，注意，path是图片所在文件夹，要返回上一级
     i =len(path)-1
     while path[-1]!= '/':
         path=path[:i]
         i=i-1
-    path=path{:i-1}
+    path=path[:i-1]
     path = path+"groundtruth_rect.txt"
     tar = []                                   #目标位置的列表，实在想不到单词了
     with open(path) as tarfile:
@@ -201,16 +202,33 @@ onlineBoosting应该说只能更新弱分类器的权值，而不能替换整个
 '''
 
 def bestFern(randomFerns,dataMat,lables,D):
-    for randomFern in randomFerns:
-        err=fernClassify()
+    minErr = np.inf
+    bestIndex = -np.inf
+    for index in range(len(randomFerns)):
+        err=app.fernClassify(randomFerns[index], dataMat)      #err为错误率，未正确分类样本数/总样本数 
+        if err<minErr:
+            minErr = err
+            bestIndex = index
+    return index, minErr
 
-def AdaBoost(randomFerns,dataMat,num):            #此处的randomFerns是单个块的
+def refrashD(alpha,D):
+    for i in range(len(D)):
+
+
+def AdaBoost(randomFerns,dataMat,num):            #此处的randomFerns是单个块的，num是这个强分类器要多少弱分类器
+    classifiers = []
     lables = [data[-1] for data in dataMat]     #注意，最后一行是标签项
     for data in dataMat:
         del data[-1]
     dataMat=np.mat(dataMat)
     m,n=np.shape(dataMat)
-    n=n-1
-    D = mat(ones((m,1))/m)                     #初始化样本权重向量为1/m
-    for i in range(num):
-        bestFern={randomFerns,dataMat,lables,D}
+    D = mat(ones((m,1))/m)                     #初始化样本权重向量为1/m,注意，这是个列向量
+    for i in range(num):                       #对于每个弱分类器
+        classifier={}
+        bestFernIndex,err=bestFern(randomFerns, dataMat, lables, D)
+        alpha = 0.5*log((1-err)/err)           #计算alpha
+        D=refrashD(alpha,D)                    #更新权重矩阵D
+        classifier["fernIndex"]=bestFernIndex
+        classifier["alpha"] = alpha
+        classifiers.append(classifier)
+    

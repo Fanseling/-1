@@ -29,13 +29,14 @@ for image in images:                              #对于每一帧
         offsetInfos=[]
         #上面两个都是二位列表，blocksInfos[0][0][x]是第一个示例的第一个块的起始坐标的x值
 
-        for instance in allInstance                 #对于每个示例分块并存储。这个循环只能干这么点事
+        for instance in allInstance:                #对于每个示例分块并存储。这个循环只能干这么点事
             blocksInfo,offsetInfo = imageFrag(image,instance[x],instance[y],target[lenth],target[y],2,4)   #分块
             #blocksInfo记录块的起始位置xy以及块的长宽。offsetInfo记录块相对于图像的偏移信息
             blocksInfos.append(blocksInfo)
             offsetInfos.append(offsetInfo)
         #循环结束
-        randomFerns = randomFern(inteIma,blocksInfos,lables,numFeat，numFern)         #所有块都拿去学习建蕨，但只有4个块用来检测。numFeat是每块选择的特征数量，暂没定是多少
+        randomFerns=[]
+        randomFerns = lt.randomFern(inteIma,blocksInfos,lables,numFeat，numFern)         #所有块都拿去学习建蕨，但只有4个块用来检测。numFeat是每块选择的特征数量，暂没定是多少
         #randomFerns第一维是建立的数个蕨，第二维是每个块。
 
         fn = len(randomFerns[0])
