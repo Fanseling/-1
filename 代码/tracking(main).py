@@ -35,7 +35,6 @@ for image in images:                              #对于每一帧
             blocksInfos.append(blocksInfo)
             offsetInfos.append(offsetInfo)
         #循环结束
-        randomFerns=[]
         randomFerns = lt.randomFern(inteIma,blocksInfos,lables,numFeat，numFern)         #所有块都拿去学习建蕨，但只有4个块用来检测。numFeat是每块选择的特征数量，暂没定是多少
         #randomFerns第一维是建立的数个蕨，第二维是每个块。
 
