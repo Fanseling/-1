@@ -39,10 +39,12 @@ for image in images:                              #对于每一帧
         #randomFerns第一维是建立的数个蕨，第二维是每个块。
 
         fn = len(randomFerns[0])
+        blockClassi=[]                         #每个块的强分类器（adaboost分类器）
         for i in range(fn):                    #对每个块建立分类器
             randomfern = randomFerns[:][i]     #真是想不到什么名字了
-            AdaBoost(randomfern)
-
+            classifier=[]                      #强分类器
+            classifier = lt.AdaBoost(randomfern)
+            blockClassi.append(classifier)
 
 
     else:                                     #第二帧及以后

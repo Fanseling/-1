@@ -234,4 +234,4 @@ def AdaBoost(randomFerns,dataMat,num):            #此处的randomFerns是单个
         classifier["fernIndex"]=bestFernIndex
         classifier["alpha"] = alpha
         classifiers.append(classifier)
-    
+    return classifiers
