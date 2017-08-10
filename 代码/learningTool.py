@@ -142,7 +142,7 @@ def buildFerns(dataMat,lables):                      #这是以前《机器学�
     m,n = np.shape(dataMat)
     result = [data[-1] for data in dataMat]
     if n==1:
-        return dataMat.sum()/(float)m
+        return dataMat.sum()/(float)m                #返回的是后验概率
     fern={}
     #dataMatTem=dataMat[:,:]
     #lablesTem = lables[:]
@@ -177,21 +177,23 @@ def buildFerns(dataMat,lables):                      #这是以前《机器学�
     del featureIndex[index]
     '''
 
-def randomFern(inteIma,blocksInfos,lables,numFeat，numFern):                      #建成随机蕨组，强内聚，低耦合，这里直接调用上面的函数
-    randomFerns = []
+def randomFern(inteIma,blocksInfos,lables,numFeat,numFern):                      #建成随机蕨组，强内聚，低耦合，这里直接调用上面的函数
+    randomFerns = []                                            #八个块全部的蕨
+    features = []
     for i in range(numFern):
-        blocksFern = []
+        blocksFern = []                                         #每个块的蕨
         featurelist = randomSelect(blocksInfos[0][0]['lenth'],blocksInfos[0][0]['width'],numFeat)
+        features.append(featurelist)
         dataArray= data2Mat(inteIma,featurelist,blocksInfos))             #这是个三维数组
         dataMats,lables= basicOnBlock(dataArray,lables,numFeat)           #改变了dataMat和lables的结构，具体看函数注释
         #将block和picture的维度换一下，现在block是第一维,并且将lables并入dataMats最后一列，lables重装特征序列号
-        for dataMat in dataMats:                                #这样，每个dataMat就可以当成普通分类树来写了
-            fern={}
+        for dataMat in dataMats:                                #对于每个block。这样，每个dataMat就可以当成普通分类树来写了
+            fern={}                                             #一个蕨
             dataMat=np.mat(dataMat)
             fern=buildFerns(dataMat,lables)
             blocksFern.append(fern)
         randomFerns.append(blocksFern)
-    return randomFerns，dataMats
+        return randomFerns,dataMats, features
 
 '''
     由于onlineAdaboost包含Adaboost全部代码，事实上这里只有onlineAdaboost。此处的
@@ -204,7 +206,7 @@ onlineBoosting应该说只能更新弱分类器的权值，而不能替换整个
 def bestFern(randomFerns,dataMat,lables,D):
     minErr = np.inf
     bestIndex = -np.inf
-    for index in range(len(randomFerns)):
+    for index in range(len(randomFerns)):                           #对于每个块的蕨
         result=[]
         result = app.fernClassify(randomFerns[index], dataMat)      #err为错误率，未正确分类样本数/总样本数
         err=abs(result-lables).sum()/len(lables)
@@ -231,7 +233,7 @@ def AdaBoost(randomFerns,dataMat,num):            #此处的randomFerns是单个
         bestFernIndex,err=bestFern(randomFerns, dataMat, lables, D)
         alpha = 0.5*log((1-err)/err)           #计算alpha
         D = refrashD(alpha,D)                  #更新权重矩阵D
-        classifier["fernIndex"]=bestFernIndex
+        classifier["fern"]=randomFerns[bestFernIndex]  # 此处的classifier是若分类器
         classifier["alpha"] = alpha
-        classifiers.append(classifier)
+        classifiers.append(classifier)         #classifiers是强分类器了
     return classifiers

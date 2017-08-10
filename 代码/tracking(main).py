@@ -35,16 +35,20 @@ for image in images:                              #对于每一帧
             blocksInfos.append(blocksInfo)
             offsetInfos.append(offsetInfo)
         #循环结束
-        randomFerns = lt.randomFern(inteIma,blocksInfos,lables,numFeat，numFern)         #所有块都拿去学习建蕨，但只有4个块用来检测。numFeat是每块选择的特征数量，暂没定是多少
+        randomFerns,dataMats,features = lt.randomFern(inteIma,blocksInfos,lables,numFeat，numFern)         #所有块都拿去学习建蕨，但只有4个块用来检测。numFeat是每块选择的特征数量，暂没定是多少
         #randomFerns第一维是建立的数个蕨，第二维是每个块。
+        #numFeat是每块选择的特征数量，暂没定是多少
+        #numFern是建多少个随机蕨以供boosting选择
+        #features是在每个块的哪个位置建立的特征值，这个是每帧用一次的。所有的块都一样这是个二维数组，第一维是每个随机蕨，第二位是随机蕨中每个特征值的位置
+        #features是有问题的，第二维并未随建蕨而改变顺序。
 
         fn = len(randomFerns[0])
-        blockClassi=[]                         #每个块的强分类器（adaboost分类器）
-        for i in range(fn):                    #对每个块建立分类器
-            randomfern = randomFerns[:][i]     #真是想不到什么名字了
-            classifier=[]                      #强分类器
-            classifier = lt.AdaBoost(randomfern)
-            blockClassi.append(classifier)
+        blockClassifier=[]                         #每个块的强分类器（adaboost分类器）
+        for i in range(fn):                        #对每个块建立分类器
+            randomfern = randomFerns[:][i]         #真是想不到什么名字了
+            classifier=[]                          #强分类器
+            classifier = lt.AdaBoost(randomfern,dataMats[i])
+            blockClassifier.append(classifier)
 
 
     else:                                     #第二帧及以后
