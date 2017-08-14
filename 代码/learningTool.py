@@ -138,7 +138,8 @@ def devision(dataMat,i,value):                  #用于树的分裂，之前想�
             devDataMat.append(temdata)
     return devDataMat
 
-def buildFerns(dataMat,lables):                      #这是以前《机器学习实战》的实现方法，效率真tm低，以后用自己想的改进下。
+
+def buildFerns(dataMat, lables):  # 这是以前《机器学习实战》的实现方法，效率真tm低，以后用自己想的改进下。
     m,n = np.shape(dataMat)
     result = [data[-1] for data in dataMat]
     if n==1:
@@ -179,7 +180,7 @@ def buildFerns(dataMat,lables):                      #这是以前《机器学�
 
 def randomFern(inteIma,blocksInfos,lables,numFeat,numFern):                      #建成随机蕨组，强内聚，低耦合，这里直接调用上面的函数
     randomFerns = []                                            #八个块全部的蕨
-    features = []
+    features = []                                               #存储每个块特征的信息
     for i in range(numFern):
         blocksFern = []                                         #每个块的蕨
         featurelist = randomSelect(blocksInfos[0][0]['lenth'],blocksInfos[0][0]['width'],numFeat)
@@ -190,7 +191,7 @@ def randomFern(inteIma,blocksInfos,lables,numFeat,numFern):                     
         for dataMat in dataMats:                                #对于每个block。这样，每个dataMat就可以当成普通分类树来写了
             fern={}                                             #一个蕨
             dataMat=np.mat(dataMat)
-            fern=buildFerns(dataMat,lables)
+            fern=buildFerns(dataMat, lables)
             blocksFern.append(fern)
         randomFerns.append(blocksFern)
         return randomFerns,dataMats, features
