@@ -149,14 +149,17 @@ def getPosBag(x,y,lenth,width,proportion=0.2):                #取得正包， x
     x_end = int(x + lenth * proportion/2)
     y_star = int(y - width * proportion/2)
     y_end = int(y + width * proportion/2)
-    positiveBag = []
     tem = {}
+    positiveBag = []
+    tem['x'] = x
+    tem['y'] = y
+    positiveBag.append(tem)                                 #将初始图片放在第一个位置。下面是其他正示例。
     while y_star <= y_end:
         while x_star <= x_end:
             tem['x'] = x_star
             tem['y'] = y_star
             positiveBag.append(tem)
-            x_star += 2
+            x_star += 2                #×××××××××用固定像素可能不太好×××××××××××××
         y_star += 2
     return positiveBag                                       #结构：列表，每个列表元素是字典，是正包起始位置xy
 

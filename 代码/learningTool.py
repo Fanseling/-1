@@ -1,26 +1,6 @@
 import numpy as np
 from ImageTool import towBitBP           #此处彻底破坏了之前的低耦合想法
 import application as app
-def getPosition(path):                   #(文件操作)从给定的txt中，获取目标位置，注意，path是图片所在文件夹，要返回上一级
-    i =len(path)-1
-    while path[-1]!= '/':
-        path=path[:i]
-        i=i-1
-    path=path[:i-1]
-    path = path+"groundtruth_rect.txt"
-    tar = []                                   #目标位置的列表，实在想不到单词了
-    with open(path) as tarfile:
-        targets = tarfile.readlines()
-        for target in targets:
-            tem = {}
-            target.strip()
-            locate = target.split(',')
-            tem['x'] = locate[0]
-            tem['y'] = locate[1]
-            tem['lenth'] = locate[2]
-            tem['width'] = locate[3]
-            tar.append(tem)
-    return tar
 
 def randomSelect(lenth,width,num):                       #随机挑选y用于组成随机蕨的特征。参数为图像块的长宽，特征数量。在图像块上选取。
     x = 0                                                #这里是通用模块，固定以（0,0）为起点，特定示例用的时候加上该示例的起点x，y就行
@@ -194,7 +174,7 @@ def randomFern(inteIma,blocksInfos,lables,numFeat,numFern):                     
             fern=buildFerns(dataMat, lables)
             blocksFern.append(fern)
         randomFerns.append(blocksFern)
-        return randomFerns,dataMats, features
+        return randomFerns,dataMats, features                   #返回的dataMates最后一行是标签
 
 '''
     由于onlineAdaboost包含Adaboost全部代码，事实上这里只有onlineAdaboost。此处的

@@ -15,13 +15,17 @@ def fernClassify(randomFern, dataMat, p=0):          #应用蕨分类器。p是�
             tem = randomFern[feat].get(value,False）
             if(tem):                                 #如果这个数据在蕨中存在
                 randomFern = tem                     #进入下一个子蕨
-            else: lables.append(p)                  
+            else: lables.append(p)
             if(type(randomFern) != dict):            #如果下一个子蕨不是字典（而是个数，应该是数字吧）
                 print(randomFern)
                 lables.append(randomFern)
-    return lables
+    return lables                                     #返回的是一个随机蕨的全部分类结果，是个向量
 
     def adaBoostClassify(classifiers,dataMat):
+        probability= np.array(np.zeros(len(dataMat)))
+        weight = 0
         for classifier in classifiers:
-            fernClassify(classifier["fern"], dataMat)
-    pass
+            probability += np.array(fernClassify(classifier["fern"], dataMat))*classifier["alpha"]
+            weight+=classifier["alpha"]
+        probability=probability/weight
+        return probability
