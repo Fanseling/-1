@@ -38,7 +38,7 @@ def data2Mat(inteIma,featurelist,blocksInfos):          #将图像矩阵，转�
     return dataArray
 
 def basicOnBlock(dataArray，lables,numFeat):                         #以块为基准，每个块有个矩阵，矩阵是图片和这个快的特征值。  已测试
-    dataMats = []
+    dataMats = []                      #dataMats第一维是块，第二维是示例，第三维是特征值序列
     n=len(dataArray[0])
     m=len(dataArray)                                       #n是块数，m是图数
     for i in range(n):                 #每一块
@@ -189,8 +189,11 @@ def bestFern(randomFerns,dataMat,lables,D):
     bestIndex = -np.inf
     for index in range(len(randomFerns)):                           #对于每个块的蕨
         result=[]
-        result = app.fernClassify(randomFerns[index], dataMat)      #err为错误率，未正确分类样本数/总样本数
-        err=abs(result-lables).sum()/len(lables)
+        result = app.fernClassify(randomFerns[index], dataMat)      #返回的结果是各样本为1的概率
+        for i in range(len(result)):
+            if result[i]>0.5 : result[i] = 1
+        else: result[i] = 0
+        err=abs(result-lables).sum()/(float)len(lables)                    #err为错误率，未正确分类样本数/总样本数
         if err<minErr:
             minErr = err
             bestIndex = index

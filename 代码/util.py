@@ -1,3 +1,6 @@
+'''
+通用工具模块
+'''
 import application as ap
 
 def getPosition(path):                   #(文件操作)从给定的txt中，获取目标位置，注意，path是图片所在文件夹，要返回上一级
@@ -21,5 +24,10 @@ def getPosition(path):                   #(文件操作)从给定的txt中，获
             tar.append(tem)
     return tar
 
-def choseBestBlock(blockClassifier,dataMat):
+def choseBestBlock(blockClassifier,dataMat):          #已测试
     P=adaBoostClassify(blockClassifier,dataMat)       #××××××××可能能是错的×××××××××仔细看看这个函数里dataMat到底是什么
+    result= []
+    for i in range(len(P)):
+        result.append([i,P[i]])
+    result=sorted(result, reverse=True key=lambda x:x[1])
+    return result

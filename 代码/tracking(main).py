@@ -3,25 +3,29 @@ import ImageTool as it                             #包含图像操作相关函�
 import learningTool as lt                          #其他工具函数基本都在里面，包括目标位置的提取
 import numpy as np
 import util as ut
+import time
+version = 1
 imagePath = input("输入图片序列的路径：")                      #初始化
 color = input("输入图片颜色位数（1表示黑白，3表示彩色）：")
 images = os.listdir(imagePath).sort()
-m = len(images)
-track = []                                        #记录追踪过程中目标位置的序列
 target = {}                                       #记录一帧中目标位置，放在track里
 X,Y,lenth,width = map(int,input ("输入目标初始坐标,及长宽,空格隔开：").split())   #第一帧手动输入
 target[x] = X
 target[y] = Y
 target[lenth] = lenth
 target[width] = width
+track = []                                        #记录追踪过程中目标位置的序列
 track.append(target)
+
+#以下是循环和循环要用的变量了
 StanPosition =ut.getPosition(path)                #从标准位置文件中获取目标真实位置
 CenterError =[]
+bestBlock=[]                                      #选择的块
 for image in images:                              #对于每一帧
-    inteIma = getInteIma(image)                   #积分图
+    imaMat = it.image2Mat(imagePath+'/'+image,color)
+    inteIma = it.getInteIma(imaMat)                   #积分图
     if image == '0001.jpg':                       #第一帧只学习，不分类，单独拿出来
         originIndex = 0
-        imaMat = it.image2Mat(imagePath+'/'+image)
         posBag = getPosBag(X,Y,lenth,width)                 #正包
         lables = np.ones(len(posBag))                       #正包标签
         negBag = getNegBag(X,Y,lenth,width)                 #负包
@@ -38,20 +42,24 @@ for image in images:                              #对于每一帧
             offsetInfos.append(offsetInfo)
         #循环结束
         randomFerns,dataMats,features = lt.randomFern(inteIma,blocksInfos,lables,numFeat，numFern)         #所有块都拿去学习建蕨，但只有4个块用来检测。numFeat是每块选择的特征数量，暂没定是多少
+        #dataMats第一维是块，第二维是示例，第三维是特征值序列
         #randomFerns第一维是建立的数个蕨，第二维是每个块。
         #numFeat是每块选择的特征数量，暂没定是多少
         #numFern是建多少个随机蕨以供boosting选择
         #features是在每个块的哪个位置建立的特征值，这个是每帧用一次的。所有的块都一样这是个二维数组，第一维是每个随机蕨，第二位是随机蕨中每个特征值的位置
-        #features是有问题的，第二维并未随建蕨而改变顺序。新发现，不需要随建蕨而改变顺序，每次都要重新建蕨，以学习图像的变化。
+        #features是有问题的，第二维并未随建蕨而改变顺序。新发现，不需要随建蕨而改变顺序，每次都要重新建蕨，以学习图像的变化,计算量飙升。
 
         fn = len(randomFerns[0])
         blockClassifier=[]                         #每个块的强分类器（adaboost分类器）
         for i in range(fn):                        #对每个块建立分类器
-            randomfern = randomFerns[:][i]         #真是想不到什么名字了
+            randomfern = [x[i] for x in randomFerns]         #真是想不到什么名字了,并且randomFerns[:][i]的方式不行！
             classifier=[]                          #强分类器
             classifier = lt.AdaBoost(randomfern,dataMats[i],num)    #**********num是多少还没定***************
             blockClassifier.append(classifier)
 
-        bestBlock=choseBestBlock(blockClassifier,dataMats[0])   #此处的dataMats还是个二维list
+        block=choseBestBlock(blockClassifier,[x[0] for x in dataMats])   #此处的dataMats还是个list，只取初始示例的八个块的特征值，去计算
+        bestBlock = [x[1] for x in block][0:4]
 
     else:                                     #第二帧及以后
+        now = time.time()                     #现在时间（以秒为单位）
+        if vesion == 1 :                      #别人的方法，即没有轨迹预测和全块学习

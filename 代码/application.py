@@ -16,7 +16,7 @@ def fernClassify(randomFern, dataMat, p=0):          #应用蕨分类器。p是�
             if(tem):                                 #如果这个数据在蕨中存在
                 randomFern = tem                     #进入下一个子蕨
             else: lables.append(p)
-            if(type(randomFern) != dict):            #如果下一个子蕨不是字典（而是个数，应该是数字吧）
+            if(type(randomFern) != dict):            #如果下一个子蕨不是字典（而是个float数，应该是数字吧）
                 print(randomFern)
                 lables.append(randomFern)
     return lables                                     #返回的是一个随机蕨的全部分类结果，是个向量
