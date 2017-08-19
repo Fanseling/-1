@@ -3,6 +3,7 @@ import ImageTool as it                             #包含图像操作相关函�
 import learningTool as lt                          #其他工具函数基本都在里面，包括目标位置的提取
 import numpy as np
 import util as ut
+import application as ap
 import time
 version = 1
 imagePath = input("输入图片序列的路径：")                      #初始化
@@ -14,14 +15,15 @@ target[x] = X
 target[y] = Y
 target[lenth] = lenth
 target[width] = width
-track = []                                        #记录追踪过程中目标位置的序列
-track.append(target)
 
 #以下是循环和循环要用的变量了
 StanPosition =ut.getPosition(path)                #从标准位置文件中获取目标真实位置
 CenterError =[]
 bestBlock=[]                                      #选择的块
+targetPosition = []                                        #记录追踪过程中目标位置的序列
+targetPosition.append(target)
 for image in images:                              #对于每一帧
+    blockClassifier=[]                            #每个块已训练好的的强分类器（adaboost分类器）
     imaMat = it.image2Mat(imagePath+'/'+image,color)
     inteIma = it.getInteIma(imaMat)                   #积分图
     if image == '0001.jpg':                       #第一帧只学习，不分类，单独拿出来
@@ -50,7 +52,6 @@ for image in images:                              #对于每一帧
         #features是有问题的，第二维并未随建蕨而改变顺序。新发现，不需要随建蕨而改变顺序，每次都要重新建蕨，以学习图像的变化,计算量飙升。
 
         fn = len(randomFerns[0])
-        blockClassifier=[]                         #每个块的强分类器（adaboost分类器）
         for i in range(fn):                        #对每个块建立分类器
             randomfern = [x[i] for x in randomFerns]         #真是想不到什么名字了,并且randomFerns[:][i]的方式不行！
             classifier=[]                          #强分类器
@@ -58,9 +59,22 @@ for image in images:                              #对于每一帧
             blockClassifier.append(classifier)
 
         block=choseBestBlock(blockClassifier,[x[0] for x in dataMats])   #此处的dataMats还是个list，只取初始示例的八个块的特征值，去计算
-        bestBlock = [x[1] for x in block][0:4]
+        bestBlock = [x[1] for x in block]
 
     else:                                     #第二帧及以后
         now = time.time()                     #现在时间（以秒为单位）
+        blocks = []                           #检测出的块的位置
         if vesion == 1 :                      #别人的方法，即没有轨迹预测和全块学习
             #以块为单位进行全图片检测，四个块各检测一个滑动窗口‘遍’，找出概率超过50%并且最高的，作为预测点。
+            dataMats,dataPosition = ut.getData(inteIma)   #没写完！应用滑动窗口，获取数据
+            for i in bestBlock:
+                probability = ap.adaBoostClassify(blockClassifier[i],dataMats)  #使用某个块的分类器对数据分析，得到概率向量
+                maxP = probability.max()
+#                print(maxP)
+                maxIndex = list(probability).index(maxP)
+                if maxP>0.5: blocks.append(dataPosition[maxIndex])
+                if len(blocks) == 4: break
+            if len(blocks)<4 :
+                print ("第"+image+"张图片遮挡过多，检测失败")
+                continue
+            #
