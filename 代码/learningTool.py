@@ -176,6 +176,22 @@ def randomFern(inteIma,blocksInfos,lables,numFeat,numFern):                     
         randomFerns.append(blocksFern)
         return randomFerns,dataMats, features                   #返回的dataMates最后一行是标签
 
+def updateFern(inteIma,blocksInfos,lables,features,numFeat,numFern):    #建成随机蕨组，强内聚，低耦合，这里直接调用上面的函数
+    randomFerns = []                                            #八个块全部的蕨
+    features = []                                               #存储每个块特征的信息
+    for i in range(numFern):
+        blocksFern = []                                         #每个块的蕨
+        dataArray= data2Mat(inteIma,features[i],blocksInfos))             #这是个三维数组
+        dataMats,lables= basicOnBlock(dataArray,lables,numFeat)           #改变了dataMat和lables的结构，具体看函数注释
+        #将block和picture的维度换一下，现在block是第一维,并且将lables并入dataMats最后一列，lables重装特征序列号
+        for dataMat in dataMats:                                #对于每个block。这样，每个dataMat就可以当成普通分类树来写了
+            fern={}                                             #一个蕨
+            dataMat=np.mat(dataMat)
+            fern=buildFerns(dataMat, lables)
+            blocksFern.append(fern)
+        randomFerns.append(blocksFern)
+        return randomFerns,dataMats                             #返回的dataMates最后一行是标签
+
 '''
     由于onlineAdaboost包含Adaboost全部代码，事实上这里只有onlineAdaboost。此处的
 onlineBoosting应该说只能更新弱分类器的权值，而不能替换整个弱分类器，因为在2bitBP上弱分类器茫
@@ -221,3 +237,6 @@ def AdaBoost(randomFerns,dataMat,num):            #此处的randomFerns是单个
         classifier["alpha"] = alpha
         classifiers.append(classifier)         #classifiers是强分类器了
     return classifiers
+
+    def updateFern():
+        pass
