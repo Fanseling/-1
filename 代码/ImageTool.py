@@ -83,9 +83,9 @@ def imageFrag(image,x,y,lenth,width,xBlockNum,yBlockNum):           #图像分�
             #imageBlocks.append(imageBlock)
             blockInfo.append(InfoTem)
             offsetInfo.append(offsetTem)
-    return blockInfo,offsetInfo#,imageBlocks
+    return blockInfo,offsetInfo#,imageBlocks                     返回的是块的位置信息，和偏倚信息，需要进一步处理。
 
-def objectConfirm(x_t,y_t,blockInfo,offsetInfo):       #确认目标最终位置，注意输入的要是跟踪块的块信息.x_t,y_t为上一帧的目标中心坐标
+def objectConfirm(x_t,y_t,blockInfo,offsetInfo):       #确认目标最终位置，注意输入的要是跟踪块的块信息.x_t,y_t为上一帧的目标中心坐标，offsetInfo是上一帧的偏移信息
     m= len(blockInfo)                                  #以局部预测的整体位置
     objectInf = {}
     max_w = -inf

@@ -31,11 +31,11 @@ blockSorted = []                                  # 块按概率排序的列表�
 targetPosition = []                                        #记录追踪过程中目标位置的序列
 targetPosition.append(target)
 blockClassifier = []                              # 每个块已训练好的的强分类器（adaboost分类器）
-blocksInfos = []                                  # 维护示例的分块信息
-offsetInfos = []                                  # 维护分块的偏移信息
+offsetInfo = []                                  # 维护分块的偏移信息,所有示例的值都相同，并且不需要重置
 features = []
 
 for image in images:                              #对于每一帧
+    blocksInfos = []                                  # 维护示例的分块信息，每帧需要重置。
     imaMat = it.image2Mat(imagePath+'/'+image,color)  #图像转矩阵
     inteIma = it.getInteIma(imaMat)                   #积分图
     if image == '0001.jpg':                       #第一帧只学习，不分类，单独拿出来
@@ -54,7 +54,6 @@ for image in images:                              #对于每一帧
                 image, target['x'], target['y'], target['lenth'], target['width'], 2, 4)
             #blocksInfo记录块的起始位置xy以及块的长宽。offsetInfo记录块相对于图像的偏移信息
             blocksInfos.append(blocksInfo)
-            offsetInfos.append(offsetInfo)
         #循环结束，数据准备结束，下面开始学习
         randomFerns,dataMats,features = lt.randomFern(inteIma,blocksInfos,lables,numFeat，numFern)         #所有块都拿去学习建蕨，但只有4个块用来检测。numFeat是每块选择的特征数量，暂没定是多少
         #dataMats第一维是块，第二维是示例，第三维是特征值序列
@@ -76,18 +75,21 @@ for image in images:                              #对于每一帧
         blockSorted = [x[1] for x in block]
 
 
-    else:                                     #第二帧及以后
-        now = time.time()                     #现在时间（以秒为单位）
-        blocksInfo = []                           #检测出的块的位置
-        if version == 1 :                      #别人的方法，即没有轨迹预测和全块学习
+    else:                                         #第二帧及以后
+        now = time.time()                         #现在时间（以秒为单位）
+        blocksInfo = []                           #检测出的块的位置,可以放在这里
+        blocks=[]                                 #记录P>0.5的最开始四个快的位置信息
+        obscuredBlock = []                        #被遮挡的块，每帧重置
+        if version == 1 :                         #别人的方法，即没有轨迹预测和全块学习
             #以块为单位进行全图片检测，四个块各检测一个滑动窗口‘遍’，找出概率超过50%并且最高的，作为预测点。
             dataMats,dataPosition = ut.getData(inteIma)   #没写完！应用滑动窗口，获取数据.此处滑动串口不改变图像，而是改变检测窗口大小，改两个模块
-            for i in blockSorted:
+            for i in blockSorted:            # 此处应该没错，就是 blockSorted
+                #使用某个块的分类器对数据分析，得到概率向量,此处dataMats与上面不同，是二维数组
                 probability = ap.adaBoostClassify(blockClassifier[i],dataMats)  #使用某个块的分类器对数据分析，得到概率向量
                 maxP = probability.max()
 #                print(maxP)
                 maxIndex = list(probability).index(maxP)    #得到第几个块是检测到的块
-                if maxP>0.5: blocks.append(dataPosition[maxIndex])
+                if maxP>0.5: blocks.append(dataPosition[maxIndex])    
                 if len(blocks) == 4: break      
             if len(blocks)<4 :
                 print ("第"+image+"张图片遮挡或变化过多，检测失败")
@@ -95,10 +97,18 @@ for image in images:                              #对于每一帧
             target = it.objectConfirm(targetPosition[-1]['x'], targetPosition[-1]['y'], blocks, offsetInfo) 
             targetPosition.append(target)
             #检测结束,开始计算哪里有遮挡，（概率小于50%认为有遮挡）
-            blocksInfo, offsetInfo = imageFrag(image, targetPosition[-1]['x'], targetPosition[-1]['y'],
+
+            blocksInfo, offsetInfo = imageFrag(image, targetPosition[-1]['x'], targetPosition[-1]['y'],  # 还不能用blocksInfos这个名
                       targetPosition[-1]['lenth'], targetPosition[-1]['width'], 2, 4)
+            dataTem = getDataTem(dataMats, dataPosition, blocksInfo)
+            for i in range(8):
+                P = ap.adaBoostClassify(blockClassifier[i], dataTem)
+                if P <= 0.5:
+                    obscuredBlock.append(i)
+            
 
             #遮挡计算结束，开始对新信息学习，大部分是重复if里的代码。注意，现在还没有计算错误
+
             posBag = getPosBag(targetPosition[-1]['x'], targetPosition[-1]['y'],
                                targetPosition[-1]['lenth'], targetPosition[-1]['width'])  # 正包
             lables = np.ones(len(posBag))                                                 # 正包标签

@@ -24,8 +24,8 @@ def getPosition(path):                   #(文件操作)从给定的txt中，获
             tar.append(tem)
     return tar
 
-def choseBestBlock(blockClassifier,dataMat):          #已测试
-    P=adaBoostClassify(blockClassifier,dataMat)       #××××××××可能能是错的×××××××××仔细看看这个函数里dataMat到底是什么
+def blockSortedByP(blockClassifier,dataMat):          #已测试，根据每个块在学习到的分类器上的应用，得出概率，根据概率排序
+    P=adaBoostClassify(blockClassifier,dataMat)       #输入的dataMat是二维数组
     result= []
     for i in range(len(P)):
         result.append([i,P[i]])

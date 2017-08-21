@@ -21,7 +21,7 @@ def fernClassify(randomFern, dataMat, p=0):          #应用蕨分类器。p是�
                 lables.append(randomFern)
     return lables                                     #返回的是一个随机蕨的全部分类结果，是个向量
 
-    def adaBoostClassify(classifiers,dataMat):
+    def adaBoostClassify(classifiers, dataMat) :     #应用强分类器（boosting）
         probability= np.array(np.zeros(len(dataMat)))
         weight = 0
         for classifier in classifiers:
