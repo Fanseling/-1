@@ -1,8 +1,27 @@
 import numpy as np
 from ImageTool import towBitBP           #此处彻底破坏了之前的低耦合想法
 import application as app
+import math
 
 def randomSelect(lenth,width,num):                       #随机挑选y用于组成随机蕨的特征。参数为图像块的长宽，特征数量。在图像块上选取。
+    randFeat = []
+    for i in range(num):
+        lastX = math.ceil(2 / lenth)                     #两个像素占长的百分之多少
+        lastY = math.ceil(2 / width)
+        randX = np.random.randint(0,100-lastX)           #由于图像从第0个像素开始，所以是0-100。计算具体像素点位置是长宽记得减1
+        randY = np.random.randint(0, 100 - lastY)
+        lastLen = 100 - randX
+        lastWid = 100 - randY
+        randLen = np.random.randint(lastX, lastLen)     #lastX....好好想想吧
+        randWid = np.random.randint(lastY, lastWid)
+        tem['x'] = randX
+        tem['y'] = randY
+        tem['lenth'] = randLen
+        tem['width'] = randWid
+        randFeat.append(tem)
+    return randFeat
+
+'''
     x = 0                                                #这里是通用模块，固定以（0,0）为起点，特定示例用的时候加上该示例的起点x，y就行
     y = 0
     randX = 0                                                #随机X，随机Y，随机长宽。其实不用声明在外的。
@@ -22,6 +41,7 @@ def randomSelect(lenth,width,num):                       #随机挑选y用于组
         tem['lenth'] = lastlen
         tem['width'] = lastwid
         randFeat.append(tem)
+'''
     return randFeat
 
 def data2Mat(inteIma,featurelist,blocksInfos):          #将图像矩阵，转换为2bitBP特征的特征值数组
@@ -176,7 +196,8 @@ def randomFern(inteIma,blocksInfos,lables,numFeat,numFern):                     
         randomFerns.append(blocksFern)
         return randomFerns,dataMats, features                   #返回的dataMates最后一行是标签
 
-def updateFern(inteIma,blocksInfos,lables,features,numFeat,numFern):    #建成随机蕨组，强内聚，低耦合，这里直接调用上面的函数
+            # 建成随机蕨组，强内聚，低耦合，这里直接调用上面的函数
+    def updateFern(inteIma, blocksInfos, lables, features, numFeat, numFern, obscuredBlock):
     randomFerns = []                                            #八个块全部的蕨
     features = []                                               #存储每个块特征的信息
     for i in range(numFern):
@@ -184,7 +205,9 @@ def updateFern(inteIma,blocksInfos,lables,features,numFeat,numFern):    #建成�
         dataArray= data2Mat(inteIma,features[i],blocksInfos))             #这是个三维数组
         dataMats,lables= basicOnBlock(dataArray,lables,numFeat)           #改变了dataMat和lables的结构，具体看函数注释
         #将block和picture的维度换一下，现在block是第一维,并且将lables并入dataMats最后一列，lables重装特征序列号
-        for dataMat in dataMats:                                #对于每个block。这样，每个dataMat就可以当成普通分类树来写了
+        for j in range(len(dataMats)):                                #对于每个block。这样，每个dataMat就可以当成普通分类树来写了
+            if j in obscuredBlock:continue                      #跳过被覆盖的块
+            dataMat = dataMats[j]
             fern={}                                             #一个蕨
             dataMat=np.mat(dataMat)
             fern=buildFerns(dataMat, lables)
@@ -220,7 +243,8 @@ def refrashD(alpha,D):
         D[i, 0]=(D[i, 0]*np.e**-alpha)/D.sum()
     return D
 
-def AdaBoost(randomFerns,dataMat,num):            #此处的randomFerns是单个块的，num是这个强分类器要多少弱分类器
+        # 此处的randomFerns是单个块的，num是这个强分类器要多少弱分类器
+    def AdaBoost(randomFerns, dataMat, num):
     classifiers = []
     lables = np.mat([[data[-1] for data in dataMat]]).T     #注意，最后一行是标签项,已矩阵化,列向量矩阵
     for data in dataMat:

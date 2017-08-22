@@ -31,3 +31,9 @@ def blockSortedByP(blockClassifier,dataMat):          #已测试，根据每个�
         result.append([i,P[i]])
     result=sorted(result, reverse=True key=lambda x:x[1])
     return result
+
+
+def getData(inteIma, blockInfo):
+    originlenth = blocksInfo['lenth']
+    originWidth = blocksInfo['width']
+

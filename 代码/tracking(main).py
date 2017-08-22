@@ -82,7 +82,9 @@ for image in images:                              #对于每一帧
         obscuredBlock = []                        #被遮挡的块，每帧重置
         if version == 1 :                         #别人的方法，即没有轨迹预测和全块学习
             #以块为单位进行全图片检测，四个块各检测一个滑动窗口‘遍’，找出概率超过50%并且最高的，作为预测点。
-            dataMats,dataPosition = ut.getData(inteIma)   #没写完！应用滑动窗口，获取数据.此处滑动串口不改变图像，而是改变检测窗口大小，改两个模块
+            # 没写完！应用滑动窗口，获取数据.此处滑动串口不改变图像，而是改变检测窗口大小，改两个模块
+            dataMats, dataPosition = ut.getData(
+                inteIma, blocksInfos[0][0])              # blocksInfos[0][0]是第一个示例的第一块的信息
             for i in blockSorted:            # 此处应该没错，就是 blockSorted
                 #使用某个块的分类器对数据分析，得到概率向量,此处dataMats与上面不同，是二维数组
                 probability = ap.adaBoostClassify(blockClassifier[i],dataMats)  #使用某个块的分类器对数据分析，得到概率向量
@@ -124,15 +126,17 @@ for image in images:                              #对于每一帧
                 blocksInfos.append(blocksInfo)
                 offsetInfos.append(offsetInfo)
         #循环结束，数据准备结束，下面开始学习
-        # 所有块都拿去学习建蕨，但只有4个块用来检测。numFeat是每块选择的特征数量，暂没定是多少
-        randomFerns, dataMats = lt.updateFern(inteIma, blocksInfos, lables, features,numFeat，numFern)
+        # 所有块都拿去学习建蕨，但只有4个块用来检测。numFeat是每块选择的特征数量，暂没定是多少，obscuredBlock是被遮挡的块
+        randomFerns, dataMats = lt.updateFern(inteIma, blocksInfos, lables, features, numFeat，numFern, obscuredBlock)
         fn = len(randomFerns[0])
         for i in range(fn):  # 对每个块更新分类器
+            if i in obscuredBlock:continue
             # 真是想不到什么名字了,并且randomFerns[:][i]的方式不行！
             randomfern = [x[i] for x in randomFerns]
             classifier = []                                          # 强分类器
             # **********num是多少还没定***************
-            classifier = lt.AdaBoost(randomfern, dataMats[i], num)
+            classifier = lt.AdaBoost(
+                randomfern, dataMats[i], num)
             blockClassifier.append(classifier)
 
         # 此处的dataMats还是个list，只取初始示例的八个块的特征值，去计算
