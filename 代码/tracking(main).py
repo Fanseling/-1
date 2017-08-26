@@ -56,7 +56,7 @@ for image in images:                              #对于每一帧
             blocksInfos.append(blocksInfo)
         #循环结束，数据准备结束，下面开始学习
         randomFerns,dataMats,features = lt.randomFern(inteIma,blocksInfos,lables,numFeat，numFern)         #所有块都拿去学习建蕨，但只有4个块用来检测。numFeat是每块选择的特征数量，暂没定是多少
-        #dataMats第一维是块，第二维是示例，第三维是特征值序列
+        #dataMats第一维是蕨，第二维是块，第三维是示例，第四维是每个蕨的特征值序列
         #randomFerns第一维是建立的数个蕨，第二维是每个块。
         #numFeat是每块选择的特征数量，暂没定是多少
         #numFern是建多少个随机蕨以供boosting选择
@@ -67,7 +67,7 @@ for image in images:                              #对于每一帧
         for i in range(fn):                        #对每个块建立分类器
             randomfern = [x[i] for x in randomFerns]         #真是想不到什么名字了,并且randomFerns[:][i]的方式不行！
             classifier=[]                          #强分类器
-            classifier = lt.AdaBoost(randomfern,dataMats[i],num)    #**********num是多少还没定***************
+            classifier = lt.AdaBoost(randomfern, [x[i] for x in dataMats], num)
             blockClassifier.append(classifier)
 
         # 此处的dataMats还是个list，只取初始示例的八个块的特征值，去计算
@@ -86,7 +86,7 @@ for image in images:                              #对于每一帧
             m, n = np.shape(inteIma)
             getRange = [0,n,0,m]              #取值范围，长（min，max+1），宽（min，max+1）,后面用range()所以加1
             # blocksInfos[0][0]是第一个示例的第一块的信息
-            dataMats, dataPosition = ut.getData(inteIma, blocksInfos[0][0]，getRange，features)
+            dataMats, dataPosition = ut.getData(inteIma, blocksInfos[0][0]，getRange，features) #dataMats是list结构
             for i in blockSorted:            # 此处应该没错，就是 blockSorted
                 #使用某个块的分类器对数据分析，得到概率向量,此处dataMats与上面不同，是二维数组
                 probability = ap.adaBoostClassify(blockClassifier[i],dataMats)  #使用某个块的分类器对数据分析，得到概率向量
@@ -127,20 +127,20 @@ for image in images:                              #对于每一帧
                 #blocksInfo记录块的起始位置xy以及块的长宽。offsetInfo记录块相对于图像的偏移信息
                 blocksInfos.append(blocksInfo)
                 offsetInfos.append(offsetInfo)
-        #循环结束，数据准备结束，下面开始学习
-        # 所有块都拿去学习建蕨，但只有4个块用来检测。numFeat是每块选择的特征数量，暂没定是多少，obscuredBlock是被遮挡的块
-        randomFerns, dataMats = lt.updateFern(inteIma, blocksInfos, lables, features, numFeat，numFern, obscuredBlock)
-        fn = len(randomFerns[0])
-        for i in range(fn):  # 对每个块更新分类器
-            if i in obscuredBlock:continue
+            #循环结束，数据准备结束，下面开始学习
+            # 所有块都拿去学习建蕨，但只有4个块用来检测。numFeat是每块选择的特征数量，暂没定是多少，obscuredBlock是被遮挡的块
+            randomFerns, dataMats = lt.updateFern(inteIma, blocksInfos, lables, features, numFeat，numFern, obscuredBlock)
+            fn = len(randomFerns[0])
+            for i in range(fn):  # 对每个块更新分类器
+                if i in obscuredBlock:continue
             # 真是想不到什么名字了,并且randomFerns[:][i]的方式不行！
-            randomfern = [x[i] for x in randomFerns]
-            classifier = []                                          # 强分类器
-            # **********num是多少还没定***************
-            classifier = lt.AdaBoost(
-                randomfern, dataMats[i], num)
-            blockClassifier.append(classifier)
+                randomfern = [x[i] for x in randomFerns]
+                classifier = []                                          # 强分类器
+                # **********num是多少还没定***************
+                classifier = lt.AdaBoost(
+                    randomfern, dataMats[i], num)
+                blockClassifier.append(classifier)
 
-        # 此处的dataMats还是个list，只取初始示例的八个块的特征值，去计算
-        block = ut.blockSortedByP(blockClassifier, [x[0] for x in dataMats])
-        blockSorted = [x[1] for x in block]
+            # 此处的dataMats还是个list，只取初始示例的八个块的特征值，去计算
+            block = ut.blockSortedByP(blockClassifier, [x[0] for x in dataMats])
+            blockSorted = [x[1] for x in block]
