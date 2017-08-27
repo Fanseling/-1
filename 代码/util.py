@@ -41,7 +41,7 @@ def getData(inteIma, blockInfo, getRange,features):
     blocks = []
     tureFeats=[]
     
-    dataMat =[]                                         #每个检测块的数据
+    dataMats =[]                                         #每个检测块的数据
     for magnification in range(-10,11):                   #对于块的浮动大小。长宽从缩小10%到放大10%
         lenth = int(originlenth * (1 + (magnification / 100))  # 块的长计算
         width = int(originWidth * (1 + (magnification / 100))  # 块的宽计算
@@ -57,7 +57,8 @@ def getData(inteIma, blockInfo, getRange,features):
                     block['lenth'] = lenth
                     block['width'] = width                #块的基本信息
                     blocks.append(block)
-                    tureFeat=lt.getFeature(feature, block)  # 从特征的相对位置到实际位置转换（不完全）
+                    # 从特征的相对位置到实际位置转换（不完全）
+                    tureFeat=lt.getFeature(featurelist, block)
                     #计算特征值
                     data=[]  # 每个蕨里的特征数据，按顺序排列，顺序与特征位置数组相同
                     for feature in tureFeat:               # 对于一个特征组合的不同特征位置
@@ -66,9 +67,24 @@ def getData(inteIma, blockInfo, getRange,features):
                         data.append(value)
                     dataMat.append(data)
                 dataMats.append(dataArray)
-                #此处dataMat第一维是每个块，第二维是每个蕨，第三维是蕨内容
+                #此处dataMat第一维是每个块（此处应理解为示例），第二维是每个随机蕨，第三维是蕨内容
     return dataMats, blocks
 
+def getDataTem(inteIma, features, blocksInfo):  
+    dataMats=[]
+    for blockInfo in blocksInfo:   #对于每个块
+        dataMat=[]
+        for featurelist in features:     #下面这四行我自己看着都晕，慢慢琢磨吧。
+            tureFeat=lt.getFeature(featurelist, blockInfo)
+            data=[]
+            for feature in tureFeat:
+                value=it.towBitBP(
+                    inteIma, blockInfo['x'] + feature['x'], blockInfo['y'] + feature['y'], feature['lenth'], feature['width'])
+                data.append(value)
+            dataMat.append(data)
+        dataMats.append(dataArray)
+    return dataMats
+    
 
 
 

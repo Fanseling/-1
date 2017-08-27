@@ -24,8 +24,9 @@ def fernClassify(randomFern, dataMat, p=0):          #应用蕨分类器。p是�
     def adaBoostClassify(classifiers, dataMat) :     #应用强分类器（boosting）
         probability= np.array(np.zeros(len(dataMat)))
         weight = 0
-        for classifier in classifiers:
-            probability += np.array(fernClassify(classifier["fern"], dataMat))*classifier["alpha"]
+        for classifier in classifiers:              #对于adaboost中的每个随机蕨
+        #此处要找到每个随机蕨对应的dataMat
+            probability += np.array(fernClassify(classifier["fern"], [data[classifier["index"]] for data in dataMat])) * classifier["alpha"] 
             weight+=classifier["alpha"]
         probability=probability/weight
         return probability

@@ -6,6 +6,7 @@ import numpy as np
 import util as ut
 import application as ap
 import time
+import math
 
 #一下一段调整参数
 version = 1                                       #使用论文算法
@@ -15,6 +16,7 @@ num                                              #adboosting要组多少个随�
 #以上是调整参数
 
 imagePath = input("输入图片序列的路径：")                      #初始化
+path = imagePath[:imagePath.rfind('/')]
 color = input("输入图片颜色位数（1表示黑白，3表示彩色）：")
 images = os.listdir(imagePath).sort()
 target = {}                                       #记录一帧中目标位置，放在track里
@@ -33,8 +35,11 @@ targetPosition.append(target)
 blockClassifier = []                              # 每个块已训练好的的强分类器（adaboost分类器）
 offsetInfo = []                                  # 维护分块的偏移信息,所有示例的值都相同，并且不需要重置
 features = []
+imaIndex=0
+centerErr=[]
 
 for image in images:                              #对于每一帧
+    imaIndex+=1
     blocksInfos = []                                  # 维护示例的分块信息，每帧需要重置。第一维是示例，第二维是块
     imaMat = it.image2Mat(imagePath+'/'+image,color)  #图像转矩阵
     inteIma = it.getInteIma(imaMat)                   #积分图
@@ -70,7 +75,7 @@ for image in images:                              #对于每一帧
             classifier = lt.AdaBoost(randomfern, [x[i] for x in dataMats], num)
             blockClassifier.append(classifier)
 
-        # 此处的dataMats还是个list，只取初始示例的八个块的特征值，去计算
+        # 此处的dataMats还是个list，只取初始示例的八个块的特征值，去计算   有问题
         block = ut.blockSortedByP(blockClassifier, [x[0] for x in dataMats])
         blockSorted = [x[1] for x in block]
 
@@ -82,31 +87,45 @@ for image in images:                              #对于每一帧
         obscuredBlock = []                        #被遮挡的块，每帧重置
         if version == 1 :                         #别人的方法，即没有轨迹预测和全块学习
             #以块为单位进行全图片检测，四个块各检测一个滑动窗口‘遍’，找出概率超过50%并且最高的，作为预测点。
-            # 没写完！应用滑动窗口，获取数据.此处滑动串口不改变图像，而是改变检测窗口大小，改两个模块
+            # 应用滑动窗口，获取数据.此处滑动串口不改变图像，而是改变检测窗口大小，改两个模块
             m, n = np.shape(inteIma)
             getRange = [0,n,0,m]              #取值范围，长（min，max+1），宽（min，max+1）,后面用range()所以加1
             # blocksInfos[0][0]是第一个示例的第一块的信息
             dataMats, dataPosition = ut.getData(inteIma, blocksInfos[0][0]，getRange，features) #dataMats是list结构
-            for i in blockSorted:            # 此处应该没错，就是 blockSorted
+
+
+            for i in blockSorted:            # 此处应该没错，就是 blockSorted，计算每个块的概率
                 #使用某个块的分类器对数据分析，得到概率向量,此处dataMats与上面不同，是二维数组
                 probability = ap.adaBoostClassify(blockClassifier[i],dataMats)  #使用某个块的分类器对数据分析，得到概率向量
+                #此处dataMat第一维是每个块（此处应理解为示例），第二维是每个随机蕨，第三维是蕨内容
+
+
                 maxP = probability.max()
-#                print(maxP)
+                #print(maxP)
                 maxIndex = list(probability).index(maxP)    #得到第几个块是检测到的块
                 if maxP>0.5: blocks.append(dataPosition[maxIndex])    
                 if len(blocks) == 4: break      
             if len(blocks)<4 :
                 print ("第"+image+"张图片遮挡或变化过多，检测失败")
                 continue
-            target = it.objectConfirm(targetPosition[-1]['x'], targetPosition[-1]['y'], blocks, offsetInfo) 
-            targetPosition.append(target)
+            target = it.objectConfirm(targetPosition[-1]['x'], targetPosition[-1]['y'], blocks, offsetInfo)
+            targetPosition.append(target)  # 记录追踪位置
+
+            #*************计算检测出的目标位置的中心误差***************
+            targetX,targetY = it.strat2center(target["x"], target["y"], target["lenth"], target["width"])
+            finalX, finalY = it.strat2center(
+                StanPosition["x"], StanPosition["y"], StanPosition["lenth"], StanPosition["width"])
+            centerErr.append(math.sqrt((targetX - finalX)**2 + (targetY - finalY)**2))
+
             #检测结束,开始计算哪里有遮挡，（概率小于50%认为有遮挡）
 
-            blocksInfo, offsetInfo = imageFrag(image, targetPosition[-1]['x'], targetPosition[-1]['y'],  # 还不能用blocksInfos这个名
+            blocksInfo, offsetInfo = it.imageFrag(image, targetPosition[-1]['x'], targetPosition[-1]['y'],  # 还不能用blocksInfos这个名
                       targetPosition[-1]['lenth'], targetPosition[-1]['width'], 2, 4)
-            dataTem = getDataTem(dataMats, dataPosition, blocksInfo)
+            # 获得检测到的图像的dataMat
+            dataTem = getDataTem(inteIma, features, blocksInfo)
+            #dataTem第一维是块，第二维是每个随机蕨，第三维是该随机蕨中每个特征的值
             for i in range(8):
-                P = ap.adaBoostClassify(blockClassifier[i], dataTem)
+                P = ap.adaBoostClassify(blockClassifier[i], [dataTem[i]])
                 if P <= 0.5:
                     obscuredBlock.append(i)
             
@@ -144,3 +163,10 @@ for image in images:                              #对于每一帧
             # 此处的dataMats还是个list，只取初始示例的八个块的特征值，去计算
             block = ut.blockSortedByP(blockClassifier, [x[0] for x in dataMats])
             blockSorted = [x[1] for x in block]
+    end = time.time()
+    print(end-now)
+    with open(path+'/ceterErr.txt','r') as file:
+        for err in centerErr:
+            file.write(str(err)+'\n')
+
+

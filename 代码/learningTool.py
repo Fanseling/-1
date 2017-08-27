@@ -270,12 +270,13 @@ def AdaBoost(randomFerns, dataMat, num):
             del data[-1]
     m,n=np.shape(np.mat(dataMat[0]))
     D = mat(ones((m,1))/m)                     #初始化样本权重向量为1/m,注意，这是个列向量
-    for i in range(num):                       #对于每个弱分类器
+    for i in range(num):                       #对于每个要组adaboost的弱分类器，不是全部弱分类器
         classifier={}
-        bestFernIndex,err=bestFern(randomFerns, dataMat, lables, D)
+        bestFernIndex,err=bestFern(randomFerns, dataMat, lables, D) #选择当前最好的随机蕨
         alpha = 0.5*log((1-err)/err)           #计算alpha
         D = refrashD(alpha,D)                  #更新权重矩阵D
         classifier["fern"]=randomFerns[bestFernIndex]  # 此处的classifier是若分类器
         classifier["alpha"] = alpha
+        classifier["index"] = bestFernIndex
         classifiers.append(classifier)         #classifiers是强分类器了
     return classifiers
