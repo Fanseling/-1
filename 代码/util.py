@@ -6,18 +6,13 @@ import learningTool as lt
 import ImageTool as it
 
 def getPosition(path):                   #(文件操作)从给定的txt中，获取目标位置，注意，path是图片所在文件夹，要返回上一级
-    i =len(path)-1
-    while path[-1]!= '/':
-        path=path[:i]
-        i=i-1
-    path=path[:i-1]
-    path = path+"groundtruth_rect.txt"
+    path = path+"groundtruth_rect.txt"   #已测试
     tar = []                                   #目标位置的列表，实在想不到单词了
     with open(path) as tarfile:
         targets = tarfile.readlines()
         for target in targets:
             tem = {}
-            target.strip()
+            target = target.strip()
             locate = target.split(',')
             tem['x'] = locate[0]
             tem['y'] = locate[1]

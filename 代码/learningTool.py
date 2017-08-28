@@ -3,16 +3,18 @@ from ImageTool import towBitBP           #此处彻底破坏了之前的低耦�
 import application as app
 import math
 
-def randomSelect(lenth,width,num):                       #随机挑选y用于组成随机蕨的特征。参数为图像块的长宽，特征数量。在图像块上选取。
+def randomSelect(lenth, width, num):  # 随机挑选y用于组成随机蕨的特征。参数为图像块的长宽，特征数量。在图像块上选取。已测试
     randFeat = []
     for i in range(num):
-        lastX = math.ceil(2 / lenth)                     #两个像素占长的百分之多少
+        tem = {}
+        lastX = math.ceil(2 / lenth)  # 两个像素占长的百分之多少
         lastY = math.ceil(2 / width)
-        randX = np.random.randint(0,100-lastX)           #由于图像从第0个像素开始，所以是0-100。计算具体像素点位置是长宽记得减1
+        # 由于图像从第0个像素开始，所以是0-100。计算具体像素点位置是长宽记得减1
+        randX = np.random.randint(0, 100 - lastX)
         randY = np.random.randint(0, 100 - lastY)
         lastLen = 100 - randX
         lastWid = 100 - randY
-        randLen = np.random.randint(lastX, lastLen)     #lastX....好好想想吧
+        randLen = np.random.randint(lastX, lastLen)  # lastX....好好想想吧
         randWid = np.random.randint(lastY, lastWid)
         tem['x'] = randX
         tem['y'] = randY

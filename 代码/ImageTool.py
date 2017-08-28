@@ -1,3 +1,6 @@
+'''
+图像相关工具函数。此处的“已测试”是指单元测试，整体是否有逻辑漏洞不保证
+'''
 from numpy import *
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -86,7 +89,7 @@ def imageFrag(image,x,y,lenth,width,xBlockNum,yBlockNum):           #图像分�
     return blockInfo,offsetInfo#,imageBlocks                     返回的是块的位置信息，和偏倚信息，需要进一步处理。
 
 def objectConfirm(x_t,y_t,blockInfo,offsetInfo):       #确认目标最终位置，注意输入的要是跟踪块的块信息.x_t,y_t为上一帧的目标中心坐标，offsetInfo是上一帧的偏移信息
-    m= len(blockInfo)                                  #以局部预测的整体位置
+    m= len(blockInfo)                                  #以局部预测的整体位置 已测试
     objectInf = {}
     max_w = -inf
     min_w = inf
@@ -145,7 +148,8 @@ def objectConfirm(x_t,y_t,blockInfo,offsetInfo):       #确认目标最终位置
     return objectInf
 
 def getPosBag(x,y,lenth,width,proportion=0.2):                #取得正包， x,y是最左上角的坐标
-    x_star = int(x - lenth * proportion/2)
+    a = int(x - lenth * proportion / 2)
+    x_star = a
     x_end = int(x + lenth * proportion/2)
     y_star = int(y - width * proportion/2)
     y_end = int(y + width * proportion/2)
@@ -156,34 +160,39 @@ def getPosBag(x,y,lenth,width,proportion=0.2):                #取得正包， x
     positiveBag.append(tem)                                 #将初始图片放在第一个位置。下面是其他正示例。
     while y_star <= y_end:
         while x_star <= x_end:
+            tem={}
             tem['x'] = x_star
             tem['y'] = y_star
             positiveBag.append(tem)
             x_star += 2                #×××××××××用固定像素可能不太好×××××××××××××
         y_star += 2
+        x_star = a
     return positiveBag                                       #结构：列表，每个列表元素是字典，是正包起始位置xy
 
-def getNegBag(x,y,lenth,width,proportion):                   #取得负包，参数与上面一模一样
+def getNegBag(x,y,lenth,width,proportion=0.2):                   #取得负包，参数与上面一模一样 已通过测试
     x_star = int(x - lenth * proportion/2) - lenth
     x_end = int(x + lenth * proportion/2) + lenth
     y_star = int(y - width * proportion/2) - width
     y_end = int(y + width * proportion/2) + width
     negativeBag = []
-    tem={}
     y = y_star
     while y <=y_end:
+        tem = {}
         tem['x'] = x_star
         tem['y'] = y
         negativeBag.append(tem)
+        tem = {}
         tem['x'] = x_end
         tem['y'] = y
         negativeBag.append(tem)
         y += int(width*0.1)                                  #固定每隔10%个像素，取一个负示例
     x - x_star
     while x <=x_end:
+        tem = {}
         tem['x'] = x
         tem['y'] = y_star
         negativeBag.append(tem)
+        tem = {}
         tem['x'] = x
         tem['y'] = y_end
         negativeBag.append(tem)
@@ -213,7 +222,7 @@ def mark(imaMat,x,y,lenth,width):                          #在图片上标记�
         imaMat[y+j,x+lenth-1] =0
     return imaMat
 
-def strat2center(x,y,lenth,width):                         #将起点坐标xy，变为中心坐标xy
+def strat2center(x,y,lenth,width):                         #将起点坐标xy，变为中心坐标xy,已测试
     x = x + lenth/2
     y = y + width/2
     if lenth % 2 != 0 : x = x-1
