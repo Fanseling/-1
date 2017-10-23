@@ -2,256 +2,186 @@ import numpy as np
 from ImageTool import towBitBP  # 此处彻底破坏了之前的低耦合想法
 import application as ap
 import ImageTool as it
-import learningTool as lt 
-import util
+import learningTool as lt
+import util as ut
 import math
+import sys
 
-
-'''
-mat = mat(zeros((8,6)))
-for i in range(8):
-    for j in range(6):
-            mat[i,j] = random.randint(1,5)
-print (mat)
-#uprightMat,tiltMat=ImageTool.getInteIma(mat)
-imageBlocks=[]
-imageBlocks,blockInfo,offsetInfo=ImageTool.imageFrag(mat,0,0,4,8,2,4)
-#print(blockInfo)
-#print(offsetInfo)
-#for i in range(len(imageBlocks)):
-#    print(imageBlocks[i])
-objectInf=ImageTool.objectConfirm(3,1,blockInfo[0:4],offsetInfo[0:4])
-print(objectInf)
-#print(uprightMat)
-
-#print(ImageTool.towBitBP(uprightMat,0,0,4,4))
-
-imageMat = mat(ImageTool.image2Mat('0001.jpg',1))
-x=118
-y=57
+imagePath = "/home/junkai/桌面/数据/FaceOcc2/img"
+X=118
+Y=57
 lenth=82
 width=98
-#x=x-lenth/2+1
-#y=y-width/2+1
+target = {}                                       #记录一帧中目标位置，放在track里
+target['x'] = X
+target['y'] = Y
+target['lenth'] = lenth
+target['width'] = width
+targetPosition = []                                        #记录追踪过程中目标位置的序列
+targetPosition.append(target)
+numFeat= 4
+numFern = 12
+testX=121
+testY=61
+testLenth=77
+testWidth=93
 
-imageMat = ImageTool.mark(imageMat,x,y,lenth,width)
-x=int(x-lenth*0.1)
-y = int(y - width*0.1)
-lenth = int(lenth*1.2)
-width = int(width*1.2)
-imageMat = ImageTool.mark(imageMat,x,y,lenth,width)
-ImageTool.showIma(imageMat)
-'''
-
-
-# 确认目标最终位置，注意输入的要是跟踪块的块信息.x_t,y_t为上一帧的目标中心坐标，offsetInfo是上一帧的偏移信息
-'''
-def objectConfirm(x_t, y_t, blockInfo, offsetInfo):
-    m = len(blockInfo)  # 以局部预测的整体位置
-    objectInf = {}
-    max_w = -inf
-    min_w = inf
-    objectX = 0
-    objectY = 0
-    object_len = 0
-    object_wid = 0
-    for i in range(m):
-        object_tem = {}
-        temX = blockInfo[i]['x'] + offsetInfo[i]['ox']
-        temY = blockInfo[i]['y'] + offsetInfo[i]['oy']
-        temlen = blockInfo[i]['lenth'] * offsetInfo[i]['ol']
-        temwid = blockInfo[i]['width'] * offsetInfo[i]['ow']
-        objectX += temX / 4  # 由子块预测目标的位置,采取平均数形式
-        objectY += temY / 4
-        object_len += temlen / m
-        object_wid += temwid / m
-    objectInf['x'] = int(objectX)
-    objectInf['y'] = int(objectY)
-    objectInf['lenth'] = int(object_len)
-    objectInf['width'] = int(object_wid)
-    return objectInf
-
-blockInfo = []
-tem={}
-tem['x']=3
-tem['y']=0
-tem['lenth']=2
-tem['width']=2
-blockInfo.append(tem)
-tem['x'] = 3
-tem['y'] = 2
-tem['lenth'] = 2
-tem['width'] = 2
-blockInfo.append(tem)
-tem['x'] = 1
-tem['y'] = 0
-tem['lenth'] = 2
-tem['width'] = 2
-blockInfo.append(tem)
-tem['x'] = 1
-tem['y'] = 2
-tem['lenth'] = 2
-tem['width'] = 2
-blockInfo.append(tem)
-
-x_t=2
-y_t=3
-
-offsetInfo=[]
-tem = {}
-tem['ox'] = -1
-tem['oy'] = 3
-tem['ol'] = 2
-tem['ow'] = 4
-offsetInfo.append(tem)
-tem['ox'] = -1
-tem['oy'] = 1
-tem['ol'] = 2
-tem['ow'] = 4
-offsetInfo.append(tem)
-tem['ox'] = 1
-tem['oy'] = 3
-tem['ol'] = 2
-tem['ow'] = 4
-offsetInfo.append(tem)
-tem['ox'] = 1
-tem['oy'] = 1
-tem['ol'] = 2
-tem['ow'] = 4
-offsetInfo.append(tem)
-a=objectConfirm(x_t, y_t, blockInfo, offsetInfo)
-print(a['x'])
-print(a['y'])
-print(a['lenth'])
-print(a['width'])
-'''
-#getPosBag测试
-'''
-def getPosBag(x, y, lenth, width, proportion=0.2):  # 取得正包， x,y是最左上角的坐标
-    a = int(x - lenth * proportion / 2)
-    x_star = a
-    x_end = int(x + lenth * proportion / 2)
-    y_star = int(y - width * proportion / 2)
-    y_end = int(y + width * proportion / 2)
-    tem = {}
-    positiveBag = []
-    tem['x'] = x
-    tem['y'] = y
-    positiveBag.append(tem)  # 将初始图片放在第一个位置。下面是其他正示例。
-    while y_star <= y_end:
-        #print(y_star)
-        while x_star <= x_end:
-            #print(x_star)
-            tem = {}
-            tem['x'] = x_star
-            tem['y'] = y_star
-            #print(y_star)
-            positiveBag.append(tem)
-            #print(tem)
-            x_star += 2 
-        y_star += 2
-        x_star = a
-    return positiveBag
-
-
-a = getPosBag(100, 100, 70, 70)
-print(len(a))
-print(a)
-'''
-
-#getNegBag测试
-'''
-def getNegBag(x, y, lenth, width, proportion=0.2):  # 取得负包，参数与上面一模一样
-    x_star = int(x - lenth * proportion / 2) - lenth
-    x_end = int(x + lenth * proportion / 2) + lenth
-    y_star = int(y - width * proportion / 2) - width
-    y_end = int(y + width * proportion / 2) + width
-    negativeBag = []
-    
-    y = y_star
-    while y <= y_end:
-        tem = {}
-        tem['x'] = x_star
-        tem['y'] = y
-        negativeBag.append(tem)
-        tem = {}
-        tem['x'] = x_end
-        tem['y'] = y
-        negativeBag.append(tem)
-        y += int(width * 0.1)  # 固定每隔10%个像素，取一个负示例
-    x - x_star
-    while x <= x_end:
-        tem = {}
-        tem['x'] = x
-        tem['y'] = y_star
-        negativeBag.append(tem)
-        tem = {}
-        tem['x'] = x
-        tem['y'] = y_end
-        negativeBag.append(tem)
-        x += int(lenth * 0.1)
-    return negativeBag
-
-
-a = getNegBag(100, 100, 100, 100)
-print(len(a))
-print(a)
-'''
-
-'''
-def getPosition(path):  # (文件操作)从给定的txt中，获取目标位置，注意，path是图片所在文件夹，要返回上一级
-
-    path = path + "groundtruth_rect.txt"
-    tar = []  # 目标位置的列表，实在想不到单词了
-    with open(path,'r') as tarfile:
-        targets = tarfile.readlines()
-        for target in targets:
-            tem = {}
-            target = target.strip()
-            locate = target.split(',')
-            tem['x'] = locate[0]
-            tem['y'] = locate[1]
-            tem['lenth'] = locate[2]
-            tem['width'] = locate[3]
-            tar.append(tem)
-    return tar
-
-
-a = getPosition("G:\\课题\\test\\")
-print(a)
-'''
-
-'''
-def randomSelect(lenth, width, num):  # 随机挑选y用于组成随机蕨的特征。参数为图像块的长宽，特征数量。在图像块上选取。
-    randFeat = []
-    for i in range(num):
-        tem={}
-        lastX = math.ceil(2 / lenth)  # 两个像素占长的百分之多少
-        lastY = math.ceil(2 / width)
-        # 由于图像从第0个像素开始，所以是0-100。计算具体像素点位置是长宽记得减1
-        randX = np.random.randint(0, 100 - lastX)
-        randY = np.random.randint(0, 100 - lastY)
-        lastLen = 100 - randX
-        lastWid = 100 - randY
-        randLen = np.random.randint(lastX, lastLen)  # lastX....好好想想吧
-        randWid = np.random.randint(lastY, lastWid)
-        tem['x'] = randX
-        tem['y'] = randY
-        tem['lenth'] = randLen
-        tem['width'] = randWid
-        randFeat.append(tem)
-    return randFeat
-
-
-a=randomSelect(20, 40, 6)
-print(a)
-'''
-
-
-
-
-
-imagePath = "G:\\课题\\test\\ima"
-imaMat = it.image2Mat(imagePath + '\\' + "0001.jpg", 1)
+imaMat = it.image2Mat(imagePath + '/' + "0001.jpg", 1)
 inteIma = it.getInteIma(imaMat)
-print(inteIma)
+
+
+posBag = it.getPosBag(X,Y,lenth,width)                 #正包
+lables =list(np.ones(len(posBag)))                       #正包标签
+negBag = it.getNegBag(X,Y,lenth,width,2,4)                 #负包
+lables.extend(np.zeros(len(negBag)))                #整个标签
+#负包并不是以整个图片出现的，而是以同一个块的组合出现，使每个块都学习到相同的
+
+offsetInfo=[]#这个是块偏移信息，放外面
+#print(allInstance)
+blocksInfos = []
+blockClassifier = []                              # 每个块已训练好的的强分类器（adaboost分类器）
+
+for instance in posBag:                #对于每个正示例分块并存储。这个循环只能干这么点事。
+    # 分块,第一帧就用target了，没用targetPosition[-1]
+    blocksInfo, offsetInfo = it.imageFrag(
+        instance['x'], instance['y'], instance['lenth'], instance['width'], 2, 4)
+    #blocksInfo记录块的起始位置xy以及块的长宽。offsetInfo记录块相对于图像的偏移信息
+    blocksInfos.append(blocksInfo)    #所有示例的偏移信息是一样的，不需要在添加一个列表
+
+for i in range(len(negBag)):                           #负示例分块,每个示例八个块，每个块内容是一模一样
+    blocksInfo = []
+    for j in range(8):
+        blocksInfo.append(negBag[i])
+    blocksInfos.append(blocksInfo)
+
+#**********************测试*********************
+'''
+tems=[]
+blocksInfoTem, offsetInfoTem = it.imageFrag(
+    targetPosition[-1]['x'], targetPosition[-1]['y'], targetPosition[-1]['lenth'], targetPosition[-1]['width'], 2, 4)
+
+#imaMatTem=it.mark(imaMat,blocksInfoTem[0]['x'],blocksInfoTem[0]['y'],blocksInfoTem[0]['lenth'],blocksInfoTem[0]['width'])
+
+
+for i in range(len(blocksInfoTem)):
+    Tem = {}
+    Tem['position']=blocksInfoTem[i]
+    Tem['blockIndex'] = i
+    tems.append(Tem)
+
+targetTem = it.objectConfirm(targetPosition[-1]['x'], targetPosition[-1]['y'],tems,offsetInfoTem)
+print(targetTem)
+imaMatTem=it.mark(imaMat,targetPosition[-1])
+imaMatTem=it.mark(imaMat,tems[0]['position'])
+imaMatTem=it.mark(imaMat,tems[1]['position'])
+imaMatTem=it.mark(imaMat,tems[2]['position'])
+imaMatTem=it.mark(imaMat,tems[3]['position'])
+imaMatTem=it.mark(imaMat,targetTem)
+it.showIma(imaMatTem)
+sys.exit("测试退出")
+'''
+#**********************结束***********************
+
+#循环结束，数据准备结束，下面开始学习
+
+randomFerns,dataMats,features = lt.randomFern(inteIma,blocksInfos,lables,numFeat,numFern)
+#dataMats第一维是蕨，第二维是块，第三维是示例，第四维是每个蕨的特征值序列
+#randomFerns第一维是建立的数个蕨，第二维是每个块。
+#print(randomFerns)
+fn = len(randomFerns[0])
+for i in range(fn):                        #对每个块建立分类器
+    randomfern = [x[i] for x in randomFerns]         #真是想不到什么名字了,并且randomFerns[:][i]的方式不行！
+    classifier=[]                          #强分类器
+    classifier = lt.AdaBoost(randomfern, [x[i] for x in dataMats], 8)
+    blockClassifier.append(classifier)
+temData=[]
+for dataMat in dataMats :
+    temData.append([x[0] for x in dataMat])       #此处测试通过，意义是取第零个示例，示例在第三维
+block = ut.blockSortedByP(blockClassifier, temData)
+blockSorted = [x[0] for x in block]
+#print(blockSorted)
+
+#print(len(randomFerns))
+#print(randomFerns.type())
+#print(randomFerns)
+
+#*******************第二帧*********************
+#*******************第二帧*********************
+#*******************第二帧*********************
+#*******************第二帧*********************
+#*******************第二帧*********************
+imaMat = it.image2Mat(imagePath + '/' + "0016.jpg", 1)
+inteIma = it.getInteIma(imaMat)
+blocksInfo = []                           #检测出的块的位置,可以放在这里
+blocks=[]                                 #记录P>0.5的最开始四个快的位置信息
+obscuredBlock = []                        #被遮挡的块，每帧重置
+m,n=np.shape(inteIma)
+n1=max(int(targetPosition[-1]['x']-targetPosition[-1]['lenth']*0.3),0)
+n2 = min(int(targetPosition[-1]['x']+targetPosition[-1]['lenth']*1.3),n-2)
+m1 = max(int(targetPosition[-1]['y']-targetPosition[-1]['width']*0.3),0)
+m2=min(int(targetPosition[-1]['y']+targetPosition[-1]['width']*1.3),m-2)
+getRange = [n1,n2,m1,m2]   #取值范围，长（min，max+1），宽（min，max+1）,后面用range()所以加1。
+dataMats, dataPosition = ut.getData(inteIma, blocksInfos[0][0],getRange,features) #dataMats是list结构
+#此处dataMat第一维是每个块（此处应理解为示例），第二维是每个随机蕨，第三维是蕨内容
+#print(dataMats)
+
+for i in blockSorted:            # 此处应该没错，就是 blockSorted，计算每个块的概率
+    probability=[]                            #对下一帧进行检测，各个块为目标块的概率向量
+    for dataMat in dataMats:
+        #使用某个块的分类器对数据分析，得到概率向量,此处dataMats与上面不同，是二维数组
+        probability.append(ap.adaBoostClassify(blockClassifier[i],dataMat))  #使用某个块的分类器对数据分析，得到概率向量
+        #此处dataMat第一维是每个块（此处应理解为示例），第二维是每个随机蕨，第三维是蕨内容
+
+    maxP = max(probability)
+    #print(probability)
+    print(i,'处最大概率为',maxP)
+    #maxIndex = probability.index(maxP)
+
+    maxIndex = ut.getList(probability,maxP)    #得到哪几个块是概率最大的块
+    print("maxIndex出现次数：",len(maxIndex))
+    maxIndex = maxIndex[int(len(maxIndex)/2)]
+    #print("maxIndex最终位置",maxIndex)
+    if maxP>0.6:
+        block={}
+        block['position'] =dataPosition[maxIndex]
+        block['blockIndex'] = i
+        blocks.append(block)
+        #print("检测的块数",i,"最大概率为：",maxP)
+        #print('位置：     ',dataPosition[maxIndex])
+        #print('标准位置为：',blocksInfos[0][i])
+    if len(blocks) == 4: break
+if len(blocks)<4 :
+    sys.exit("第"+image+"张图片遮挡或变化过多，检测失败")
+
+target = it.objectConfirm(targetPosition[-1]['x'], targetPosition[-1]['y'], blocks, offsetInfo)
+print("检测到的目标：",target)
+print("原始目标位置：",targetPosition[-1])
+#print("真实目标位置：{'x': 121, 'y': 61, 'lenth': 77, 'width': 93,}",)
+
+
+#for i in range(76846,89040):
+#    imaMatTem=it.mark(imaMat,dataPosition[i])
+imaMatTem=it.mark(imaMat,blocks[0]['position'])
+imaMatTem=it.mark(imaMat,blocks[1]['position'])
+imaMatTem=it.mark(imaMat,blocks[2]['position'])
+imaMatTem=it.mark(imaMat,blocks[3]['position'])
+imaMatTem=it.mark(imaMat,target)
+
+it.showIma(imaMatTem)
+sys.exit("断点退出。")
+
+
+
+
+
+
+
+
+
+targetPosition.append(target)  # 记录追踪位置
+
+#*************计算检测出的目标位置的中心误差***************
+targetX,targetY = it.strat2center(target["x"], target["y"], target["lenth"], target["width"])
+finalX, finalY = it.strat2center(
+    StanPosition["x"], StanPosition["y"], StanPosition["lenth"], StanPosition["width"])
+centerErr.append(math.sqrt((targetX - finalX)**2 + (targetY - finalY)**2))
