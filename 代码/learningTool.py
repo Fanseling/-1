@@ -36,8 +36,8 @@ def getFeature(featurelist, blockInfo):  # 这里是通用模块，固定以（0
     #print(blockInfo)
     for feature in featurelist:
         tem={}
-        tem['x'] = round(feature['x']/100 * (blockInfo['lenth'])-1) #此处减一严格来说是有问题的，但影响不大。
-        tem['y'] = round(feature['y'] /100 * (blockInfo['width'])-1)
+        tem['x'] = round(feature['x']/100 * (blockInfo['lenth'])) #此处减一严格来说是有问题的，但影响不大。
+        tem['y'] = round(feature['y'] /100 * (blockInfo['width']))
         tem['lenth'] = round(feature['lenth']/100 * (blockInfo['lenth']))
         tem['width'] = round(feature['width'] /100 * (blockInfo['width']))
         result.append(tem)
@@ -79,14 +79,20 @@ def data2Mat(inteIma,featurelist,blocksInfos):          #将图像矩阵，转�
         dataArray.append(blocksArr)
     return dataArray
 
-def basicOnBlock(dataArray,lables,numFeat):                         #以块为基准，每个块有个矩阵，矩阵是图片和这个快的特征值。  已测试
-    dataMats = []                      #dataMats第一维是块，第二维是示例，第三维是特征值序列
+def basicOnBlock(dataArray,lables,numFeat):  #以块为基准，每个块有数个矩阵，矩阵是图片和这个快的特征值。  已测试
+    dataMats = []                      #dataMats第一维是块，第二维是示例，第三维是特征值序列（数个蕨的2bitbp值）
     n=len(dataArray[0])
     m=len(dataArray)                   #n是块数，m是图数
     #print(m)
     for i in range(n):                 #每一块
         dataMat=[]
         for j in range(m):             #每一张图片
+
+
+            #可能有问题
+            #可能有问题
+            #可能有问题
+        #可能有问题
             dataArray[j][i].append(lables[j])
             dataMat.append(dataArray[j][i])
             #print(dataMat)
@@ -264,7 +270,7 @@ def buildFerns(dataMat, lables):  # 这是以前《机器学习实战》的实�
     '''
 
 
-# 建成随机蕨，numFeat是每个蕨里特征数量，numFern是每个块蕨的数量（用来建boosting）。强内聚，低耦合，这里直接调用上面的函数
+# 建成随机蕨，numFeat是每个蕨里特征数量，numFern是每个块蕨的数量（用来建boosting）。
 def randomFern(inteIma, blocksInfos, lables, numFeat, numFern):
     randomFerns = []                                            #八个块全部的蕨
     features = []                                               #存储每个块特征的信息

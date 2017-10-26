@@ -176,8 +176,8 @@ def objectConfirm(x_t,y_t,blockInfo,offsetInfo):       #确认目标最终位置
     return objectInf
 
 def getPosBag(x,y,lenth,width,proportion=0.2):                #取得正包， x,y是最左上角的坐标
-    a = int(x - lenth * proportion / 2)
-    x_star = a
+
+    x_star = int(x - lenth * proportion / 2)
     x_end = int(x + lenth * proportion/2)
     y_star = int(y - width * proportion/2)
     y_end = int(y + width * proportion/2)
